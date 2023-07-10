@@ -65,3 +65,44 @@
         state: started
         enabled: yes
       when: ansible_os_family == 'RedHat'
+
+
+Make sure to create a file called load_balancer.conf.j2 in the same directory as the playbook, with the following content:
+
+
+apache
+Copy code
+
+```
+<VirtualHost *:80>
+    ServerName myloadbalancer.example.com
+
+    <Proxy balancer://mycluster>
+        BalancerMember http://backend1.example.com:80
+        BalancerMember http://backend2.example.com:80
+        # Add more BalancerMembers for additional backend servers
+
+        ProxySet lbmethod=byrequests
+    </Proxy>
+
+    ProxyPass / balancer://mycluster/
+    ProxyPassReverse / balancer://mycluster/
+</VirtualHost>
+```
+
+In this example, the playbook assumes you have a group of servers defined in your Ansible inventory file under the name load_balancer_servers. Adjust the group name as per your inventory setup. The playbook installs Apache HTTP Server on the target servers, enables the necessary modules, copies the load balancer configuration file, and starts the Apache service.
+
+
+To execute the playbook, save it to a file (e.g., install_load_balancer.yml) and run the following command:
+
+
+css
+Copy code
+ansible-playbook -i inventory.ini install_load_balancer.yml
+
+Replace inventory.ini with your actual inventory file.
+
+
+Please note that this playbook assumes the target servers are running either Debian-based (e.g., Ubuntu) or Red Hat-based (e.g., CentOS) distributions. Adjust the package manager commands (apt and yum) and other tasks as per your target server distribution and configuration.
+
+
